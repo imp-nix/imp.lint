@@ -2,11 +2,13 @@
 { pkgs, self', imp, ... }:
 let
   shellHookFragments = imp.fragments ./shellHook.d;
-  packageFragments = imp.fragmentsWith { inherit pkgs self'; } ./packages.d;
+  # shell-packages.d/ contains list fragments for devshell packages
+  # (separate from packages.d/ which contains attrset fragments for self'.packages)
+  shellPackageFragments = imp.fragmentsWith { inherit pkgs self'; } ./shell-packages.d;
 in
 {
   default = pkgs.mkShell {
-    packages = packageFragments.asList ++ [ self'.formatter ];
+    packages = shellPackageFragments.asList ++ [ self'.formatter ];
     shellHook = ''
       ${shellHookFragments.asString}
       echo ""
