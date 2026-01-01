@@ -1,13 +1,18 @@
-# Composable lintfra shell configuration
-# Provides packages and shellHook for lint tooling
-#
-# Usage in consuming repo's devShells.nix:
-#   {
-#     default = pkgs.mkShell {
-#       inputsFrom = [ self'.devShells.lintfra ];
-#       packages = [ /* your packages */ ];
-#     };
-#   }
+/**
+  Composable lintfra shell configuration.
+  Provides packages and shellHook for lint tooling.
+
+  Usage in consuming repo's devShells.nix:
+
+  ```nix
+  {
+    default = pkgs.mkShell {
+      inputsFrom = [ self'.devShells.lintfra ];
+      packages = [ /* your packages */ ];
+    };
+  }
+  ```
+*/
 { pkgs, self', ... }:
 {
   lintfra = pkgs.mkShell {

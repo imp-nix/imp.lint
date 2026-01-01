@@ -1,4 +1,7 @@
-# Lintfra devshell - uses inputsFrom to compose with lintfra shell
+/**
+  Lintfra devshell.
+  Uses inputsFrom to compose with the lintfra shell from devShells.d/.
+*/
 { pkgs, self', ... }:
 {
   default = pkgs.mkShell {
