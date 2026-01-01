@@ -7,23 +7,13 @@
       self',
       ...
     }:
-    let
-      lint-cmd = pkgs.writeShellScriptBin "lint" ''
-        if [[ -x ./nix/scripts/lint-runner ]]; then
-          exec ./nix/scripts/lint-runner "$@"
-        else
-          echo "Error: lint-runner not found. Run from project root." >&2
-          exit 1
-        fi
-      '';
-    in
     {
       default = pkgs.mkShell {
         packages = [
           pkgs.ast-grep
           pkgs.yq-go
           pkgs.jq
-          lint-cmd
+          self'.packages.lint
           self'.formatter
         ];
 
