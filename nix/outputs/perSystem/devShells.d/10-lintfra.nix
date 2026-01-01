@@ -8,7 +8,7 @@
   {
     default = pkgs.mkShell {
       inputsFrom = [ self'.devShells.lintfra ];
-      packages = [ /* your packages */ ];
+      packages = [ ... ];  # your packages
     };
   }
   ```
