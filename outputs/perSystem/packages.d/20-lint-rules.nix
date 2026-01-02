@@ -1,10 +1,12 @@
-/**
-  Package to generate ast-grep YAML rules from Nix definitions.
-*/
-{ pkgs, lib, ... }:
+{
+  pkgs,
+  lib,
+  self,
+  ...
+}:
 let
-  astGrep = import ../../lib/ast-grep-rule.nix { inherit lib; };
-  rulesDir = ../../../../lint/rules;
+  astGrep = import "${self}/nix/lib/ast-grep-rule.nix" { inherit lib; };
+  rulesDir = "${self}/lint/rules";
 
   # Load all .nix files from lint/rules/
   ruleFiles = builtins.filter (f: lib.hasSuffix ".nix" f) (
