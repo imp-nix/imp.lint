@@ -26,10 +26,18 @@ def make-finding [
     }
 }
 
-def run-ast-grep []: nothing -> list {
+def run-ast-grep [rules_dir?: string]: nothing -> list {
     if (which ast-grep | is-empty) { return [] }
 
-    let result = (^ast-grep scan --json=stream | complete)
+    # Use provided rules dir, or fall back to LINTFRA_RULES env, or default location
+    let dir = $rules_dir | default ($env.LINTFRA_RULES? | default "lint/ast-rules")
+    
+    let result = if ($dir | path exists) {
+        ^ast-grep scan --rule $dir --json=stream | complete
+    } else {
+        ^ast-grep scan --json=stream | complete
+    }
+    
     if $result.exit_code in [0, 1] {
         $result.stdout | lines | where { $in | str trim | is-not-empty } | each { $in | from json }
     } else {
