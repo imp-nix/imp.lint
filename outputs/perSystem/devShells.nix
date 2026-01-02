@@ -18,7 +18,7 @@ in
 {
   default = pkgs.mkShell {
     inputsFrom = [
-      self'.devShells.lintfra
+      self'.devShells.imp-lint
       formatterEval.config.build.devShell
     ];
     shellHook = ''

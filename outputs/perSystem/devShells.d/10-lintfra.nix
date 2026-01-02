@@ -1,25 +1,10 @@
-/**
-  Composable lintfra shell configuration.
-  Provides packages and shellHook for lint tooling.
-
-  Usage in consuming repo's devShells.nix:
-
-  ```nix
-  {
-    default = pkgs.mkShell {
-      inputsFrom = [ self'.devShells.lintfra ];
-      packages = [ ... ];  # your packages
-    };
-  }
-  ```
-*/
 { pkgs, self', ... }:
 {
-  lintfra = pkgs.mkShell {
+  imp-lint = pkgs.mkShell {
     packages = [
       pkgs.ast-grep
       pkgs.nushell
-      self'.packages.lint
+      self'.packages.imp-lint
     ];
 
     shellHook = ''
@@ -37,7 +22,7 @@ EOF
         fi
       fi
 
-      echo "Lint: lint (ast-grep + clippy + custom rules)"
+      echo "imp-lint: imp-lint (ast-grep + clippy + custom rules)"
     '';
   };
 }

@@ -1,10 +1,6 @@
-/**
-  Lint package for self'.packages.
-  Returns attrset to be merged into packages output.
-*/
 { pkgs, ... }:
 {
-  lint = pkgs.writeShellScriptBin "lint" ''
+  imp-lint = pkgs.writeShellScriptBin "imp-lint" ''
     if [[ -f ./nix/scripts/lint-runner.nu ]]; then
       exec ${pkgs.nushell}/bin/nu ./nix/scripts/lint-runner.nu "$@"
     elif [[ -x ./nix/scripts/lint-runner ]]; then

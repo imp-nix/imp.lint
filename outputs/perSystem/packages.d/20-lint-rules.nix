@@ -28,9 +28,9 @@ let
   '';
 in
 {
-  lint-rules = generatedRules;
+  imp-lint-rules = generatedRules;
 
-  lint-rules-sync = pkgs.writeShellScriptBin "lint-rules-sync" ''
+  imp-lint-rules-sync = pkgs.writeShellScriptBin "imp-lint-rules-sync" ''
     set -e
     dest="''${1:-lint/ast-rules}"
     mkdir -p "$dest"
