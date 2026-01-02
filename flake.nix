@@ -23,21 +23,35 @@
         { pkgs, lib, self', ... }:
         let
           astGrep = import ./nix/lib/ast-grep-rule.nix { inherit lib; };
-          rulesDir = ./lint/rules;
-          ruleFiles = builtins.filter (f: lib.hasSuffix ".nix" f) (
-            builtins.attrNames (builtins.readDir rulesDir)
-          );
-          rules = map (f: {
-            name = lib.removeSuffix ".nix" f;
-            rule = import (rulesDir + "/${f}") { inherit (astGrep) mkRule; };
-          }) ruleFiles;
+          customRule = import ./nix/lib/custom-rule.nix { inherit lib; };
 
-          generatedRules = pkgs.runCommand "ast-grep-rules" { buildInputs = [ pkgs.yq-go ]; } ''
+          # ast-grep rules from lint/rules/
+          astRulesDir = ./lint/rules;
+          astRuleFiles = builtins.filter (f: lib.hasSuffix ".nix" f) (
+            builtins.attrNames (builtins.readDir astRulesDir)
+          );
+          astRules = map (f: {
+            name = lib.removeSuffix ".nix" f;
+            rule = import (astRulesDir + "/${f}") { inherit (astGrep) mkRule; };
+          }) astRuleFiles;
+
+          generatedAstRules = pkgs.runCommand "ast-grep-rules" { buildInputs = [ pkgs.yq-go ]; } ''
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (
               r: ''echo '${astGrep.toJson r.rule}' | yq -P > $out/${r.name}.yml''
-            ) rules}
+            ) astRules}
           '';
+
+          # custom rules from lint/custom/ - passed as JSON to lint-runner
+          customRulesDir = ./lint/custom;
+          customRuleFiles = builtins.filter (f: lib.hasSuffix ".nix" f) (
+            builtins.attrNames (builtins.readDir customRulesDir)
+          );
+          customRules = map (f:
+            import (customRulesDir + "/${f}") customRule
+          ) customRuleFiles;
+
+          customRulesJson = builtins.toJSON customRules;
 
           treefmtEval = inputs.treefmt-nix.lib.evalModule pkgs {
             projectRootFile = "flake.nix";
@@ -49,7 +63,8 @@
 
           packages = {
             lint = pkgs.writeShellScriptBin "lint" ''
-              export LINTFRA_RULES="${generatedRules}"
+              export LINTFRA_RULES="${generatedAstRules}"
+              export LINTFRA_CUSTOM_RULES='${customRulesJson}'
               if [[ -f ./nix/scripts/lint-runner.nu ]]; then
                 exec ${pkgs.nushell}/bin/nu ./nix/scripts/lint-runner.nu "$@"
               else
@@ -58,15 +73,14 @@
               fi
             '';
 
-            lint-rules = generatedRules;
+            lint-rules = generatedAstRules;
 
             lint-rules-sync = pkgs.writeShellScriptBin "lint-rules-sync" ''
               set -e
-              dest="''${1:-lint/ast-rules}"
-              mkdir -p "$dest"
-              rm -f "$dest"/*.yml
-              cp ${generatedRules}/*.yml "$dest/"
-              echo "Synced ${toString (builtins.length rules)} rules to $dest"
+              mkdir -p lint/ast-rules
+              rm -f lint/ast-rules/*.yml
+              cp ${generatedAstRules}/*.yml lint/ast-rules/
+              echo "Synced ${toString (builtins.length astRules)} ast-grep rules"
             '';
           };
 
@@ -81,10 +95,9 @@
             ];
 
             shellHook = ''
-              # Sync generated rules
-              if [ -d lint/ast-rules ]; then
-                cp ${generatedRules}/*.yml lint/ast-rules/
-              fi
+              # Sync generated ast-grep rules
+              mkdir -p lint/ast-rules
+              cp ${generatedAstRules}/*.yml lint/ast-rules/ 2>/dev/null || true
 
               # Install pre-commit hook
               if [ -t 0 ] && [ -d .git ] && [ -f ./nix/scripts/pre-commit.nu ]; then

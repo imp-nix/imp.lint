@@ -126,17 +126,14 @@ def run-file-metric-rule [rule: record, project_root: string]: nothing -> list {
     | compact
 }
 
-# Run all custom rules from the rules directory
+# Run all custom rules (from LINTFRA_CUSTOM_RULES env as JSON)
 def run-custom-rules [project_root: string]: nothing -> list {
-    let rules_dir = ($project_root | path join "lint" "custom-rules")
+    let rules_json = ($env.LINTFRA_CUSTOM_RULES? | default "[]")
+    let rules = ($rules_json | from json)
 
-    if not ($rules_dir | path exists) { return [] }
-
-    glob ($rules_dir | path join "*.yml")
-    | each {|rule_file|
-        let rule = (open $rule_file)
+    $rules
+    | each {|rule|
         let rule_type = ($rule.type? | default "")
-
         match $rule_type {
             "command" => { run-command-rule $rule $project_root }
             "file-metric" => { run-file-metric-rule $rule $project_root }
